@@ -1,6 +1,5 @@
 # gpu-course
 
-Below is a README file tailored for the image processing program I provided. It includes setup instructions, usage details, customization options, and additional notes, formatted in Markdown for clarity and compatibility with platforms like GitHub.
 
 ---
 
