@@ -33,7 +33,7 @@ A high-performance C++ application for batch processing of images and signal dat
 1. Clone this repository:
    ```
    git clone https://github.com/dushyant22181/gpu-course.git
-   cd image-signal-processor
+   cd gpu-course
    ```
 
 2. Install dependencies:
