@@ -50,7 +50,7 @@ A high-performance C++ application for batch processing of images and signal dat
 
 3. Build the application:
    ```
-   g++ -std=c++17 main.cpp -o image_signal_processor -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
+   g++ -std=c++17 main.cpp -o gpu-course -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
    ```
 
 ## Usage
