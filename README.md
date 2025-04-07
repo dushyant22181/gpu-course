@@ -1,143 +1,55 @@
-# Image and Signal Processing Program
-
-A high-performance C++ application for batch processing of images and signal data files. This program can efficiently handle hundreds of small images or dozens of large images, as well as CSV-based signal data.
-
-## Features
-
-### Image Processing
-- **Gaussian Blur**: Apply configurable blur effect
-- **Contrast Enhancement**: Adjust image contrast and brightness
-- **Edge Detection**: Detect and blend edges with original images
-- **Batch Processing**: Process multiple images with different parameter combinations
-- **Statistics**: Analyze image dimensions and file sizes
-
-### Signal Processing
-- **Moving Average Filter**: Smooth signal data with adjustable window size
-- **Peak Detection**: Find peaks in signal data based on configurable threshold
-- **CSV Processing**: Handle and transform CSV-based signal data
-
-### General Features
-- **Command Line Interface**: Flexible parameter configuration
-- **Performance Metrics**: Track processing time and efficiency
-- **Verbose Output Option**: Detailed progress reporting
-- **Multiple Output Formats**: Organized results storage
+# CUDA Batch Image Processor
+This project applies a Gaussian blur to multiple images in parallel using CUDA.
 
 ## Requirements
+- CUDA Toolkit 12.0+
+- OpenCV 4.x (for image I/O)
+- A directory with 10+ images (e.g., .jpg or .png)
 
-- C++17 compatible compiler
-- OpenCV library (4.0 or higher recommended)
-- File system support (std::filesystem)
-
-## Installation
-
-1. Clone this repository:
-   ```
-   git clone https://github.com/dushyant22181/gpu-course.git
-   cd gpu-course
-   ```
-
-2. Install dependencies:
-   ```
-   # Ubuntu/Debian
-   sudo apt-get install libopencv-dev
-
-   # macOS
-   brew install opencv
-
-   # Windows (using vcpkg)
-   vcpkg install opencv
-   ```
-
-3. Build the application:
-   ```
-   g++ -std=c++17 main.cpp -o gpu-course -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
-   ```
+## Compilation
+make
 
 ## Usage
+./image_processor --input_dir <path_to_images> --output_dir <path_to_output>
 
-### Basic Usage
+## Example
+./image_processor --input_dir ./data/images --output_dir ./data/output
 
-Process images in a directory:
-```
-./gpu-course --mode image --input ./input_images --output ./processed_images
-```
+## Project Description
+This program processes a batch of images (tested with 10+ large 4K images) using a CUDA kernel to apply a 3x3 Gaussian blur. The CLI takes input/output directory paths as arguments. Lessons learned: Optimizing grid/block sizes improves performance; handling edge cases in the kernel is crucial.
 
-Process signal data:
-```
-./gpu-course --mode signal --input ./input_signals --output ./processed_signals
-```
+## Code Description
+The codebase is structured to leverage CUDA for parallel image processing:
 
-### Command Line Options
+### Key Components
+1. **Main Function**:
+   - Parses command-line arguments (`--input_dir` and `--output_dir`) to specify input/output directories.
+   - Validates directory existence before processing.
+   - Calls `processImages` to handle the batch.
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--mode <image\|signal>` | Processing mode | `image` |
-| `--input <directory>` | Input directory containing files to process | `./input` |
-| `--output <directory>` | Output directory for processed files | `./output` |
-| `--blur <size>` | Blur kernel size for image processing | `5` |
-| `--contrast <value>` | Contrast multiplier for image processing | `1.5` |
-| `--window <size>` | Window size for signal processing | `10` |
-| `--threshold <value>` | Threshold for peak detection | `0.5` |
-| `--analysis` | Run analysis on input files without processing | |
-| `--verbose` | Enable verbose output | |
-| `--help` | Display help message | |
+2. **processImages Function**:
+   - Iterates over all `.jpg` and `.png` files in the input directory using `std::filesystem`.
+   - For each image:
+     - Loads it using OpenCV (`imread`).
+     - Allocates CUDA device memory for input/output data.
+     - Copies image data to the GPU.
+     - Launches the Gaussian blur kernel.
+     - Copies the result back to the host and saves it with OpenCV (`imwrite`).
 
-### Examples
+3. **gaussianBlurKernel (CUDA Kernel)**:
+   - A 2D kernel that applies a 3x3 Gaussian blur to each pixel.
+   - Uses a hardcoded 3x3 Gaussian kernel with weights summing to 1 (e.g., center = 4/16, edges = 1/16).
+   - Handles RGB channels separately by iterating over them.
+   - Ensures boundary safety with `min`/`max` to avoid out-of-bounds memory access.
+   - Launched with a 2D grid/block configuration (16x16 threads per block).
 
-Process images with custom parameters:
-```
-./gpu-course --mode image --input ./photos --output ./enhanced --blur 7 --contrast 1.8 --verbose
-```
+### Implementation Details
+- **Parallelism**: Each thread processes one pixel, with the grid sized dynamically based on image dimensions.
+- **Memory Management**: Explicit CUDA memory allocation (`cudaMalloc`) and transfer (`cudaMemcpy`) for efficiency.
+- **Error Handling**: Checks for file loading failures and directory existence.
+- **Style**: Follows Google C++ Style Guide (consistent naming, comments, modularity).
 
-Analyze a collection of images:
-```
-./gpu-course --mode image --input ./dataset --analysis
-```
-
-Process signal data with custom window size:
-```
-./gpu-course --mode signal --input ./sensor_data --output ./filtered_data --window 15 --threshold 0.65
-```
-
-## Input Data Format
-
-### Images
-The program supports the following image formats:
-- JPEG (.jpg, .jpeg)
-- PNG (.png)
-- BMP (.bmp)
-- TIFF (.tif, .tiff)
-
-### Signal Data
-Signal data should be provided as CSV files with one value per line. If a header is present, the first line will be skipped.
-
-## Output Format
-
-### Images
-Processed images are saved in the same format as the input with adjustments applied.
-
-### Signal Data
-Processed signal data is saved as CSV files with the following columns:
-- `original`: Original signal value
-- `filtered`: Filtered signal value
-- `is_peak`: Binary indicator for detected peaks (1 = peak, 0 = not peak)
-
-## Performance
-
-The program is optimized for:
-- Processing hundreds of small images (< 1MB each)
-- Processing dozens of large images (> 10MB each)
-- Handling large CSV signal data files
-
-Performance metrics are displayed after processing, including:
-- Total processing time
-- Average time per file
-- File size statistics (for analysis mode)
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+### Lessons Learned
+- Tuning block size (16x16) balances thread utilization and overhead.
+- Edge cases (e.g., pixels near image borders) require careful handling to avoid artifacts.
+- Processing large datasets (e.g., 10+ 4K images) highlights the importance of GPU memory management.
