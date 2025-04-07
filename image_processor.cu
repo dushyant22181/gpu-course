@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <filesystem>
+#include <fstream>
+#include <ctime>
 
 using namespace cv;
 namespace fs = std::filesystem;
@@ -34,8 +36,16 @@ __global__ void gaussianBlurKernel(unsigned char* input, unsigned char* output, 
     }
 }
 
-// Process a batch of images
-void processImages(const std::string& inputDir, const std::string& outputDir) {
+// Get current timestamp for logging
+std::string getTimestamp() {
+    time_t now = time(0);
+    char* dt = ctime(&now);
+    std::string timestamp(dt);
+    return timestamp.substr(0, timestamp.length() - 1); // Remove newline
+}
+
+// Process a batch of images and log results
+void processImages(const std::string& inputDir, const std::string& outputDir, std::ofstream& logFile) {
     std::vector<std::string> imageFiles;
     for (const auto& entry : fs::directory_iterator(inputDir)) {
         if (entry.path().extension() == ".jpg" || entry.path().extension() == ".png") {
@@ -45,14 +55,18 @@ void processImages(const std::string& inputDir, const std::string& outputDir) {
 
     if (imageFiles.empty()) {
         std::cerr << "No images found in " << inputDir << std::endl;
+        logFile << "[" << getTimestamp() << "] ERROR: No images found in " << inputDir << std::endl;
         return;
     }
+
+    logFile << "[" << getTimestamp() << "] INFO: Starting batch processing of " << imageFiles.size() << " images" << std::endl;
 
     for (const auto& file : imageFiles) {
         // Load image
         Mat img = imread(file, IMREAD_COLOR);
         if (img.empty()) {
             std::cerr << "Failed to load " << file << std::endl;
+            logFile << "[" << getTimestamp() << "] ERROR: Failed to load " << file << std::endl;
             continue;
         }
 
@@ -83,11 +97,15 @@ void processImages(const std::string& inputDir, const std::string& outputDir) {
         imwrite(outputFile, outputImg);
 
         std::cout << "Processed: " << file << " -> " << outputFile << std::endl;
+        logFile << "[" << getTimestamp() << "] INFO: Processed " << file << " -> " << outputFile 
+                << " (Size: " << width << "x" << height << ")" << std::endl;
 
         // Clean up
         cudaFree(d_input);
         cudaFree(d_output);
     }
+
+    logFile << "[" << getTimestamp() << "] INFO: Batch processing completed" << std::endl;
 }
 
 int main(int argc, char** argv) {
@@ -104,6 +122,14 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    processImages(inputDir, outputDir);
+    // Open log file
+    std::ofstream logFile("processing_log.txt");
+    if (!logFile.is_open()) {
+        std::cerr << "Failed to open log file!" << std::endl;
+        return -1;
+    }
+
+    processImages(inputDir, outputDir, logFile);
+    logFile.close();
     return 0;
 }
