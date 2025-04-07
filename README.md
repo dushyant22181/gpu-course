@@ -1,103 +1,143 @@
-# gpu-course
+# Image and Signal Processing Program
 
-
----
-
-# Batch Image Edge Detection
-
-This Python program processes a large number of images (hundreds of small or tens of large) by applying edge detection using the Canny algorithm. It leverages multiprocessing for efficiency and includes a progress bar to track the operation.
+A high-performance C++ application for batch processing of images and signal data files. This program can efficiently handle hundreds of small images or dozens of large images, as well as CSV-based signal data.
 
 ## Features
-- Processes hundreds of small images (e.g., 512x512) or tens of large images.
-- Applies Canny edge detection to each image.
-- Uses multiprocessing to utilize multiple CPU cores.
-- Displays a progress bar during processing.
-- Saves processed images with `_edges` appended to the filename.
+
+### Image Processing
+- **Gaussian Blur**: Apply configurable blur effect
+- **Contrast Enhancement**: Adjust image contrast and brightness
+- **Edge Detection**: Detect and blend edges with original images
+- **Batch Processing**: Process multiple images with different parameter combinations
+- **Statistics**: Analyze image dimensions and file sizes
+
+### Signal Processing
+- **Moving Average Filter**: Smooth signal data with adjustable window size
+- **Peak Detection**: Find peaks in signal data based on configurable threshold
+- **CSV Processing**: Handle and transform CSV-based signal data
+
+### General Features
+- **Command Line Interface**: Flexible parameter configuration
+- **Performance Metrics**: Track processing time and efficiency
+- **Verbose Output Option**: Detailed progress reporting
+- **Multiple Output Formats**: Organized results storage
 
 ## Requirements
-- Python 3.6 or higher
-- Required libraries:
-  - `opencv-python` (for image processing)
-  - `numpy` (for array operations)
-  - `tqdm` (for progress bar)
 
-## Setup
-1. **Install Dependencies**:
-   Run the following command to install the required libraries:
-   ```bash
-   pip install opencv-python numpy tqdm
+- C++17 compatible compiler
+- OpenCV library (4.0 or higher recommended)
+- File system support (std::filesystem)
+
+## Installation
+
+1. Clone this repository:
+   ```
+   git clone https://github.com/yourusername/image-signal-processor.git
+   cd image-signal-processor
    ```
 
-2. **Prepare Input Images**:
-   - Create a folder (e.g., `input_images`).
-   - Place your images (e.g., JPEG, PNG) in this folder. The program supports `.jpg`, `.jpeg`, `.png`, and `.bmp` formats.
-   - Example: 100s of 512x512 JPEGs or 10s of larger images.
+2. Install dependencies:
+   ```
+   # Ubuntu/Debian
+   sudo apt-get install libopencv-dev
 
-3. **Output Directory**:
-   - The processed images will be saved in a folder named `output_edges` (created automatically if it doesn’t exist).
+   # macOS
+   brew install opencv
+
+   # Windows (using vcpkg)
+   vcpkg install opencv
+   ```
+
+3. Build the application:
+   ```
+   g++ -std=c++17 main.cpp -o image_signal_processor -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
+   ```
 
 ## Usage
-1. **Edit the Script** (optional):
-   - Open the script (e.g., `batch_edge_detection.py`).
-   - Modify `INPUT_DIR` and `OUTPUT_DIR` to match your folder paths:
-     ```python
-     INPUT_DIR = "your_input_folder"  # e.g., "input_images"
-     OUTPUT_DIR = "your_output_folder"  # e.g., "output_edges"
-     ```
-   - Adjust `NUM_WORKERS` based on your CPU (default is one less than total cores):
-     ```python
-     NUM_WORKERS = 4  # Example for a quad-core CPU
-     ```
 
-2. **Run the Program**:
-   Execute the script from the command line:
-   ```bash
-   python batch_edge_detection.py
-   ```
-   - The program will process all images in `INPUT_DIR` and save results to `OUTPUT_DIR`.
-   - A progress bar will show the status.
+### Basic Usage
 
-## What It Does
-- Loads each image in grayscale.
-- Applies Canny edge detection with tunable thresholds (default: 100, 200).
-- Saves the edge-detected images with `_edges` appended (e.g., `image1.jpg` → `image1_edges.jpg`).
-- Uses multiprocessing for efficient handling of large datasets.
-- Displays progress with `tqdm`.
+Process images in a directory:
+```
+./image_signal_processor --mode image --input ./input_images --output ./processed_images
+```
 
-## Customization
-- **Input/Output Paths**:
-  Change `INPUT_DIR` and `OUTPUT_DIR` in the script to your desired folders.
-- **Processing Function**:
-  Replace `cv2.Canny` with another OpenCV function for different processing:
-  - Example: Gaussian blur with `cv2.blur(img, (5, 5))`.
-  - Modify in the `process_image` function.
-- **Image Size**:
-  - For tens of large images (e.g., 4K), add resizing to avoid memory issues:
-    ```python
-    img = cv2.resize(img, (512, 512))  # Add this line in process_image
-    ```
-  - Works out-of-the-box for hundreds of small images (e.g., 512x512).
-- **Thresholds**:
-  Adjust Canny thresholds in `cv2.Canny(img, 100, 200)` for different edge sensitivity.
-- **Signal Processing**:
-  For audio or other signals, contact the developer for a modified version using SciPy.
+Process signal data:
+```
+./image_signal_processor --mode signal --input ./input_signals --output ./processed_signals
+```
 
-## Notes
-- **Scalability**: Multiprocessing makes it suitable for 100s of small images. For very large images (e.g., 10s of 4K), resize or batch them to manage memory.
-- **Error Handling**: Skips corrupt files and logs errors to the console.
-- **Performance**: Set `NUM_WORKERS` to match your CPU cores (e.g., 4 for quad-core). Too many workers may slow down due to overhead.
-- **Supported Formats**: `.jpg`, `.jpeg`, `.png`, `.bmp`. Add more extensions in `image_extensions` if needed.
+### Command Line Options
 
-## Example
-- Input: `input_images/image1.jpg`, `input_images/image2.png`
-- Output: `output_edges/image1_edges.jpg`, `output_edges/image2_edges.png`
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--mode <image\|signal>` | Processing mode | `image` |
+| `--input <directory>` | Input directory containing files to process | `./input` |
+| `--output <directory>` | Output directory for processed files | `./output` |
+| `--blur <size>` | Blur kernel size for image processing | `5` |
+| `--contrast <value>` | Contrast multiplier for image processing | `1.5` |
+| `--window <size>` | Window size for signal processing | `10` |
+| `--threshold <value>` | Threshold for peak detection | `0.5` |
+| `--analysis` | Run analysis on input files without processing | |
+| `--verbose` | Enable verbose output | |
+| `--help` | Display help message | |
 
-## Troubleshooting
-- **No images found**: Ensure `INPUT_DIR` contains valid image files.
-- **Memory errors**: Reduce `NUM_WORKERS` or resize large images.
-- **Missing libraries**: Re-run `pip install` command.
+### Examples
+
+Process images with custom parameters:
+```
+./image_signal_processor --mode image --input ./photos --output ./enhanced --blur 7 --contrast 1.8 --verbose
+```
+
+Analyze a collection of images:
+```
+./image_signal_processor --mode image --input ./dataset --analysis
+```
+
+Process signal data with custom window size:
+```
+./image_signal_processor --mode signal --input ./sensor_data --output ./filtered_data --window 15 --threshold 0.65
+```
+
+## Input Data Format
+
+### Images
+The program supports the following image formats:
+- JPEG (.jpg, .jpeg)
+- PNG (.png)
+- BMP (.bmp)
+- TIFF (.tif, .tiff)
+
+### Signal Data
+Signal data should be provided as CSV files with one value per line. If a header is present, the first line will be skipped.
+
+## Output Format
+
+### Images
+Processed images are saved in the same format as the input with adjustments applied.
+
+### Signal Data
+Processed signal data is saved as CSV files with the following columns:
+- `original`: Original signal value
+- `filtered`: Filtered signal value
+- `is_peak`: Binary indicator for detected peaks (1 = peak, 0 = not peak)
+
+## Performance
+
+The program is optimized for:
+- Processing hundreds of small images (< 1MB each)
+- Processing dozens of large images (> 10MB each)
+- Handling large CSV signal data files
+
+Performance metrics are displayed after processing, including:
+- Total processing time
+- Average time per file
+- File size statistics (for analysis mode)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
-This project is open-source under the MIT License. Feel free to modify and distribute.
 
----
+This project is licensed under the MIT License - see the LICENSE file for details.
