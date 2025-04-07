@@ -59,12 +59,12 @@ A high-performance C++ application for batch processing of images and signal dat
 
 Process images in a directory:
 ```
-./image_signal_processor --mode image --input ./input_images --output ./processed_images
+./gpu-course --mode image --input ./input_images --output ./processed_images
 ```
 
 Process signal data:
 ```
-./image_signal_processor --mode signal --input ./input_signals --output ./processed_signals
+./gpu-course --mode signal --input ./input_signals --output ./processed_signals
 ```
 
 ### Command Line Options
@@ -86,17 +86,17 @@ Process signal data:
 
 Process images with custom parameters:
 ```
-./image_signal_processor --mode image --input ./photos --output ./enhanced --blur 7 --contrast 1.8 --verbose
+./gpu-course --mode image --input ./photos --output ./enhanced --blur 7 --contrast 1.8 --verbose
 ```
 
 Analyze a collection of images:
 ```
-./image_signal_processor --mode image --input ./dataset --analysis
+./gpu-course --mode image --input ./dataset --analysis
 ```
 
 Process signal data with custom window size:
 ```
-./image_signal_processor --mode signal --input ./sensor_data --output ./filtered_data --window 15 --threshold 0.65
+./gpu-course --mode signal --input ./sensor_data --output ./filtered_data --window 15 --threshold 0.65
 ```
 
 ## Input Data Format
